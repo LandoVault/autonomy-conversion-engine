@@ -1,8 +1,8 @@
 # ACE — Autonomy Conversion Engine
 
-A local-first, federated personal operations system: agent-panel-first, Obsidian-hub-centered, loop-backed, and two-layered — **ACE-P** (personal work surface) and **ACE-C** (institution-side tools for regulated/clinical work), bridged only by reviewed, sanitized, minimum-necessary packages.
+A GTD x PARA local-first, federated personal operations system: agent-panel-first, Obsidian-hub-centered, loop-backed, and two-layered — **ACE-P** (personal work surface) and **ACE-C** (institution-side tools for regulated/clinical work), bridged only by reviewed, sanitized, minimum-necessary packages.
 
-ACE aims to reduce cognitive burden, improve ordinary execution reliability, and convert selected work into durable evidence and increased autonomy.
+ACE aims to reduce cognitive burden, improve ordinary execution reliability, and convert selected work into durable memory and increased autonomy with human-AI interactions.
 
 > Ask agents to do bounded cognitive work; use loops to preserve continuity; use Obsidian to preserve human legibility and control.
 
