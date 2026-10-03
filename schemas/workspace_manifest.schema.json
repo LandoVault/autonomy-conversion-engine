@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ACE Workspace Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "project_id",
+    "display_name",
+    "roots",
+    "authoritative_files",
+    "agent_visible_roots",
+    "unseen_context",
+    "last_verified"
+  ],
+  "properties": {
+    "project_id": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "roots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "authoritative_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "known_bad_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "agent_visible_roots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unseen_context": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "last_verified": {
+      "type": "string"
+    }
+  }
+}

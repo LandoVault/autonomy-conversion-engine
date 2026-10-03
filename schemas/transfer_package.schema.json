@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ACE Cross-Layer Transfer Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "source_layer",
+    "target_layer",
+    "purpose",
+    "sensitivity",
+    "contains_phi",
+    "source_scope",
+    "missing_context",
+    "approval_state",
+    "state"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "source_layer": {
+      "enum": [
+        "ACE-P",
+        "ACE-C"
+      ]
+    },
+    "target_layer": {
+      "enum": [
+        "ACE-P",
+        "ACE-C"
+      ]
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "sensitivity": {
+      "enum": [
+        "public",
+        "internal",
+        "restricted"
+      ]
+    },
+    "contains_phi": {
+      "const": false
+    },
+    "source_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_context": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reviewer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "approval_state": {
+      "enum": [
+        "draft",
+        "human_reviewed",
+        "approved",
+        "rejected"
+      ]
+    },
+    "expires_at": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "state": {
+      "enum": [
+        "draft",
+        "scope_checked",
+        "sanitized",
+        "human_reviewed",
+        "needs_revision",
+        "approved",
+        "exported",
+        "imported",
+        "acknowledged",
+        "applied",
+        "closed",
+        "rejected",
+        "expired",
+        "recalled"
+      ]
+    }
+  }
+}

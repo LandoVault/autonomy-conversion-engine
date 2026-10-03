@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ACE Panel Exit Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "session_id",
+    "panel_type",
+    "objective",
+    "sources_seen",
+    "sources_not_seen",
+    "outcome",
+    "proposed_state_changes",
+    "next_action",
+    "hub_destination",
+    "confidence"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "panel_type": {
+      "enum": [
+        "explore",
+        "decide",
+        "produce",
+        "review"
+      ]
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources_seen": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sources_not_seen": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outcome": {
+      "type": "string"
+    },
+    "evidence_created": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proposed_state_changes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "commitments_detected": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "resume_context": {
+      "type": "string"
+    },
+    "hub_destination": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

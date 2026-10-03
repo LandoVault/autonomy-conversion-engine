@@ -1,0 +1,160 @@
+# ACE state machines — machine-readable projection of 04_STATE_MACHINES.md
+# v1.1 (2026-07-19). The .md is authoritative for semantics; divergence is a validation error.
+# v1.1 changes vs v1.0:
+#   - ADDED machine project_evidence_lifecycle (was in .md, missing from yaml)
+#   - ADDED guards on every transition (v1.0 encoded none)
+#   - FIX commitment_return: canceled is terminal; cancel paths from clarified/actionable/
+#     waiting/scheduled_return/in_progress, all guarded by explicit cancellation approval (Q-D2)
+#   - FIX handoff: rejected now reachable via recipient_reviewed -> rejected (was unreachable) (Q-D2)
+#   - FIX red_queen_epoch: mutation_rejected -> failure_identified | epoch_frozen (was dead end) (Q-D2)
+#   - project_evidence_lifecycle keeps the .md's handoff_machine delegation state
+#     (handoff_candidate -> handoff_machine -> closed); note the v1.0 .md gives
+#     handoff_machine no explicit outgoing edge — the -> closed edge here encodes the
+#     .md prose ("closes when the handoff machine closes") rather than inventing semantics
+version: "1.1"
+invariant: "Models propose transitions; deterministic validation and required human approvals enforce them."
+machines:
+
+  panel_lifecycle:
+    initial: created
+    terminal: [closed]
+    states: [created, scoped, active, exit_package_drafted, validation_failed, validated,
+              hub_pending, accepted, rejected, durable_state_updated, resume_packet_generated, closed]
+    transitions:
+      - {from: created, to: scoped, guard: "objective, panel type, visible roots, limits, and expected output defined"}
+      - {from: scoped, to: active, guard: "session packet delivered to panel"}
+      - {from: active, to: exit_package_drafted, guard: "panel stop condition met"}
+      - {from: exit_package_drafted, to: validation_failed, guard: "schema or source-scope check failed"}
+      - {from: validation_failed, to: active, guard: "actionable errors returned to panel"}
+      - {from: exit_package_drafted, to: validated, guard: "schema and source-scope checks pass"}
+      - {from: validated, to: hub_pending, guard: "proposed changes visible in hub as pending update"}
+      - {from: hub_pending, to: accepted, guard: "approval class satisfied (auto / batch / explicit per 03 section 5)"}
+      - {from: hub_pending, to: rejected, guard: "human rejects; audit record written"}
+      - {from: accepted, to: durable_state_updated, guard: "authoritative personal state updated; traceable to sources"}
+      - {from: durable_state_updated, to: resume_packet_generated, guard: "exact next session state prepared"}
+      - {from: resume_packet_generated, to: closed}
+      - {from: rejected, to: closed, guard: "rejection leaves an audit record"}
+
+  commitment_return:
+    initial: captured
+    terminal: [closed, canceled]
+    states: [captured, clarified, actionable, waiting, scheduled_return, returned,
+              in_progress, closed, canceled]
+    transitions:
+      - {from: captured, to: clarified, guard: "clarification performed later, never at capture time (FR-1)"}
+      - {from: clarified, to: actionable}
+      - {from: clarified, to: waiting, guard: "waiting person or context recorded"}
+      - {from: clarified, to: scheduled_return, guard: "return date set; may include no_action_before"}
+      - {from: scheduled_return, to: returned, guard: "return date reached; deterministic loop fires"}
+      - {from: waiting, to: returned, guard: "response received or wait timeout reached"}
+      - {from: returned, to: actionable}
+      - {from: actionable, to: in_progress}
+      - {from: in_progress, to: closed, guard: "closure evidence recorded (never silent)"}
+      - {from: in_progress, to: waiting}
+      - {from: clarified, to: canceled, guard: "explicit cancellation approval"}          # v1.1 fix
+      - {from: actionable, to: canceled, guard: "explicit cancellation approval"}         # v1.1 fix
+      - {from: waiting, to: canceled, guard: "explicit cancellation approval"}            # v1.1 fix
+      - {from: scheduled_return, to: canceled, guard: "explicit cancellation approval"}   # v1.1 fix
+      - {from: in_progress, to: canceled, guard: "explicit cancellation approval"}        # v1.1 fix
+
+  project_evidence_lifecycle:   # v1.1: restored from .md (absent in v1.0 yaml)
+    initial: proposed
+    terminal: [closed]
+    states: [proposed, idea_queue, active, evidence_defined, in_production, verification,
+              revise, shipped, compound, publish_and_close, handoff_candidate,
+              handoff_machine, kill_candidate, human_decision, closed]
+    transitions:
+      - {from: proposed, to: active, guard: "WIP limit respected if PA-1 adopted (03 section 8)"}
+      - {from: proposed, to: idea_queue, guard: "stored without promotion to active work"}
+      - {from: active, to: evidence_defined, guard: "next evidence unit named"}
+      - {from: evidence_defined, to: in_production}
+      - {from: in_production, to: verification}
+      - {from: verification, to: revise}
+      - {from: revise, to: in_production}
+      - {from: verification, to: shipped, guard: "acceptance criteria checked"}
+      - {from: shipped, to: compound, guard: "reuse, adoption, or follow-on evidence recorded"}
+      - {from: shipped, to: publish_and_close}
+      - {from: active, to: handoff_candidate}
+      - {from: active, to: kill_candidate, guard: "at risk: no next evidence unit or shipment within configured period (value TBD, Q-D7)"}
+      - {from: handoff_candidate, to: handoff_machine, guard: "delegates to the handoff machine (machine 4)"}
+      - {from: handoff_machine, to: closed, guard: "handoff machine reached a terminal state (closed or rejected)"}
+      - {from: kill_candidate, to: human_decision}
+      - {from: human_decision, to: closed, guard: "explicit human approval (never silent kill)"}
+      - {from: compound, to: active}
+      - {from: publish_and_close, to: closed}
+
+  handoff:
+    initial: proposed
+    terminal: [closed, rejected]
+    states: [proposed, recipient_identified, package_prepared, recipient_reviewed, needs_revision,
+              accepted, transition_period, ownership_transferred, operator_role_confirmed,
+              observation_period, rescue_reentry, closed, rejected]
+    transitions:
+      - {from: proposed, to: recipient_identified}
+      - {from: recipient_identified, to: package_prepared, guard: "provenance record included"}
+      - {from: package_prepared, to: recipient_reviewed}
+      - {from: recipient_reviewed, to: accepted, guard: "recipient explicitly accepts; next milestone exists"}
+      - {from: recipient_reviewed, to: needs_revision}
+      - {from: recipient_reviewed, to: rejected, guard: "recipient declines outright"}    # v1.1 fix
+      - {from: needs_revision, to: package_prepared}
+      - {from: accepted, to: transition_period}
+      - {from: transition_period, to: ownership_transferred, guard: "recurring operator obligations removed"}
+      - {from: ownership_transferred, to: operator_role_confirmed, guard: "retained role and rescue threshold explicit"}
+      - {from: operator_role_confirmed, to: observation_period}
+      - {from: observation_period, to: closed, guard: "successor completed an independent milestone; no rescue re-entry outside threshold"}
+      - {from: observation_period, to: rescue_reentry, guard: "predefined rescue threshold crossed (never informal)"}
+      - {from: rescue_reentry, to: ownership_transferred}
+
+  cross_layer_transfer:
+    initial: draft
+    terminal: [closed, rejected, expired, recalled]
+    states: [draft, scope_checked, sanitized, human_reviewed, needs_revision, approved,
+              exported, imported, acknowledged, applied, closed, rejected, expired, recalled]
+    transitions:
+      - {from: draft, to: scope_checked, guard: "source scope and missing context declared"}
+      - {from: scope_checked, to: sanitized, guard: "sanitization criteria applied (PA-3 checklist once adopted)"}
+      - {from: sanitized, to: human_reviewed, guard: "redaction check complete"}
+      - {from: human_reviewed, to: needs_revision}
+      - {from: needs_revision, to: draft}
+      - {from: human_reviewed, to: approved, guard: "explicit human approval (approval class: explicit)"}
+      - {from: approved, to: exported}
+      - {from: exported, to: imported, guard: "target layer imports the package"}
+      - {from: imported, to: acknowledged, guard: "target acknowledges receipt — export alone is never completion"}
+      - {from: acknowledged, to: applied}
+      - {from: applied, to: closed, guard: "closure receipt recorded"}
+      - {from: draft, to: rejected}
+      - {from: approved, to: expired, guard: "expiration date passed before export"}
+      - {from: exported, to: recalled, guard: "sender recalls before acknowledgment"}
+
+  hub_sync:
+    initial: completeness_unknown
+    terminal: []          # hub sync never terminates
+    states: [current, panel_update_awaiting_review, known_stale, completeness_unknown]
+    transitions:
+      - {from: completeness_unknown, to: current, guard: "state verified against sources"}
+      - {from: current, to: panel_update_awaiting_review, guard: "newer validated package pending — hub must NEVER show current while one is pending"}
+      - {from: panel_update_awaiting_review, to: current, guard: "pending update accepted or rejected and state refreshed"}
+      - {from: panel_update_awaiting_review, to: known_stale, guard: "staleness threshold passed while pending"}
+      - {from: current, to: known_stale, guard: "staleness threshold passed (human-attributable signals only, per design rule 9 if adopted)"}
+      - {from: known_stale, to: panel_update_awaiting_review, guard: "new validated package arrives"}
+
+  red_queen_epoch:
+    initial: contract_frozen
+    terminal: [epoch_frozen]
+    states: [contract_frozen, attack_cases_generated, baseline_run, failure_identified,
+              mutation_proposed, mutation_rejected, retest, regression_failure,
+              pareto_pass, human_approved, epoch_frozen]
+    transitions:
+      - {from: contract_frozen, to: attack_cases_generated, guard: "evaluation contract (07) frozen; cannot change within epoch to excuse failure"}
+      - {from: attack_cases_generated, to: baseline_run}
+      - {from: baseline_run, to: failure_identified, guard: "observed or credibly simulated failure"}
+      - {from: failure_identified, to: mutation_proposed, guard: "at most 3 design mutations per epoch"}
+      - {from: mutation_proposed, to: mutation_rejected}
+      - {from: mutation_proposed, to: retest}
+      - {from: retest, to: regression_failure}
+      - {from: regression_failure, to: mutation_rejected}
+      - {from: retest, to: pareto_pass, guard: "Pareto improvement: no evaluator regresses"}
+      - {from: pareto_pass, to: human_approved, guard: "explicit human approval"}
+      - {from: human_approved, to: epoch_frozen}
+      - {from: mutation_rejected, to: failure_identified, guard: "mutation budget remains"}   # v1.1 fix
+      - {from: mutation_rejected, to: epoch_frozen, guard: "mutation budget exhausted — epoch closes without adoption"}  # v1.1 fix
